@@ -1,5 +1,5 @@
 //#![allow(dead_code)]
-#![no_std]
+//#![no_std]
 
 use rand;
 
@@ -38,24 +38,18 @@ impl Adrs {
     }
 
     /// Set the chain field of a WOTS+ address to the given value.
-    pub fn set_chain(&mut self, c: u32) {
-        unsafe {
-            self.0.as_mut_ptr().offset(20).copy_from(c as *mut u8, 4);
-        }
+    pub fn set_chain(&mut self, b: u32) {
+        byte_array(&mut self.0[20..24], b as usize);
     }
 
     /// Set the hash field of a WOTS+ address to the given value.
-    pub fn set_hash(&mut self, h: u32) {
-        unsafe {
-            self.0.as_mut_ptr().offset(24).copy_from(h as *mut u8, 4);
-        }
+    pub fn set_hash(&mut self, b: u32) {
+        byte_array(&mut self.0[24..28], b as usize);
     }
 
     /// Set the keymask field of a WOTS+ address to the given value.
     pub fn set_keymask(&mut self, b: u32) {
-        unsafe {
-            self.0.as_mut_ptr().offset(28).copy_from(b as *mut u8, 4);
-        }
+        byte_array(&mut self.0[28..32], b as usize);
     }
 }
 
@@ -108,7 +102,7 @@ impl SecKey {
                 0,
                 *n as usize,
                 pub_seed,
-                &mut address,
+                address,
             );
         }
 
@@ -134,17 +128,20 @@ impl PubKey {
             pub_seed: *pub_seed,
             address: seckey.address,
         };
-
         let mut address = seckey.address;
+        let mut ctr = [0u8; 32];
+
+        
         for i in 0..LEN {
+            ctr[31] = i as u8;
             address.set_chain(i as u32);
             chain(
                 &mut pubkey.inner[(i * N)..(i * N + N)],
-                &prf(&seckey.seed.0, &address.0), // i-th secret key
+                &prf(&seckey.seed.0, &ctr), // i-th secret key
                 0,
                 W - 1,
                 pub_seed,
-                &mut address,
+                address,
             );
         }
 
@@ -153,7 +150,7 @@ impl PubKey {
 
     pub fn from_signature(sig: &Signature, msg: &[u8; N]) -> Self {
         let lengths = concatenation(msg);
-        let mut address = sig.address;
+        let address = sig.address;
         let mut pubkey = Self {
             inner: [0; N * LEN],
             pub_seed: sig.pub_seed,
@@ -167,7 +164,7 @@ impl PubKey {
                 *n as usize,
                 W - 1 - *n as usize,
                 &sig.pub_seed,
-                &mut address,
+                address,
             );
         }
 
@@ -185,17 +182,20 @@ fn chain(
     start: usize,
     steps: usize,
     pub_seed: &Seed,
-    address: &mut Adrs,
+    address: Adrs,
 ) {
+    output.copy_from_slice(input);
+    let mut address = address;
+
     for i in start..(start + steps) {
         if i < W {
-            address.set_hash(0);
+            address.set_hash(i as u32);
             address.set_keymask(0);
             let key = prf(&pub_seed.0, &address.0);
             address.set_keymask(1);
             let mut bitmask = prf(&pub_seed.0, &address.0);
             for i in 0..N {
-                bitmask[i] = input[i] ^ bitmask[i];
+                bitmask[i] = output[i] ^ bitmask[i];
             }
             output.copy_from_slice(&hash_f(&key, &bitmask));
         }
@@ -239,5 +239,22 @@ fn base_w(output: &mut [u8], input: &[u8]) {
         }
         bits -= LOG_W;
         *out = (total >> bits) & (W - 1) as u8;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let sk = SecKey::default();
+        println!("{}", sk.seed.0[10]);
+        let seed = Seed::default();
+        println!("{}", seed.0[0]);
+        let pk = PubKey::from_seckey(&sk, &seed);
+        let sig = sk.sign(&seed, &[0;32]);
+        println!("{}", pk.inner[100]);
+        println!("{}", sig.inner[100]);
     }
 }
