@@ -86,19 +86,21 @@ impl SecKey {
 
     /// Takes a n-byte message and the 32-byte seed for the private key to compute and return a signature.
     pub fn sign(&self, pub_seed: &Seed, msg: &[u8; N]) -> Signature {
-        let lengths = concatenation(msg);
-        let mut address = self.address;
         let mut sig = Signature {
             inner: [0; N * LEN],
             pub_seed: *pub_seed,
             address: self.address,
         };
+        let lengths = concatenation(msg);
+        let mut address = self.address;
+        let mut ctr = [0u8; 32];
 
         for (i, n) in lengths.iter().enumerate() {
+            ctr[31] = i as u8;
             address.set_chain(i as u32);
             chain(
                 &mut sig.inner[(i * N)..(i * N + N)],
-                &prf(&self.seed.0, &address.0), // i-th secret key
+                &prf(&self.seed.0, &ctr), // i-th secret key
                 0,
                 *n as usize,
                 pub_seed,
