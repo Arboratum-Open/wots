@@ -2,8 +2,8 @@ use sha2::{Digest, Sha256};
 
 use crate::N;
 
-const PADDING_F: u8 = 0;
-const PADDING_PRF: u8 = 3;
+const PADDING_F: usize = 0;
+const PADDING_PRF: usize = 3;
 
 fn core_hash(input: &[u8]) -> [u8; N] {
     let mut hasher = Sha256::new();
@@ -15,9 +15,7 @@ fn core_hash(input: &[u8]) -> [u8; N] {
 pub fn prf(key: &[u8; N], input: &[u8; 32]) -> [u8; N] {
     let mut buf = [0u8; 2 * N + 32];
 
-    for i in 0..N {
-        buf[i] = PADDING_PRF;
-    }
+    byte_array(&mut buf[0..N], PADDING_PRF);
 
     for i in 0..N {
         buf[N + i] = key[i];
@@ -34,9 +32,7 @@ pub fn prf(key: &[u8; N], input: &[u8; 32]) -> [u8; N] {
 pub fn hash_f(key: &[u8; N], input: &[u8; N]) -> [u8; N] {
     let mut buf = [0u8; 3 * N];
 
-    for i in 0..N {
-        buf[i] = PADDING_F;
-    }
+    byte_array(&mut buf[0..N], PADDING_F);
 
     for i in 0..N {
         buf[N + i] = key[i];
@@ -47,4 +43,11 @@ pub fn hash_f(key: &[u8; N], input: &[u8; N]) -> [u8; N] {
     }
 
     core_hash(&buf)
+}
+
+pub fn byte_array(output: &mut [u8], mut input: usize) {
+    for i in (0..output.len()).rev() {
+        output[i] = (input & 0xff) as u8;
+        input = input >> 8;
+    }
 }
