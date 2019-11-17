@@ -18,7 +18,7 @@ const L2: usize = 3;
 const LEN: usize = L1 + L2;
 
 /// The key seed for both secrey key and public key
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Seed([u8; N]);
 
 impl Seed {
@@ -28,7 +28,7 @@ impl Seed {
 }
 
 /// The address to randomize each hash function call to prevent multi-target attacks on the used hash function.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Adrs([u8; 32]);
 
 impl Adrs {
@@ -58,6 +58,22 @@ impl Adrs {
     }
 }
 
+/// WOTS+ private key that hasn't expanded yet. It contain a seed to derive and an address for the key pair
+#[derive(Clone, Default)]
+pub struct SecKey {
+    seed: Seed,
+    address: Adrs,
+}
+
+impl SecKey {
+    pub fn new() -> Self {
+        Self {
+            seed: Seed::new(),
+            address: Adrs::new(),
+        }
+    }
+}
+
 /// WOTS+ public key
 #[derive(Clone)]
 pub struct PubKey {
@@ -69,25 +85,25 @@ pub struct PubKey {
 impl PubKey {
     /// WOTS public key generation. Takes a 32 byte seed for the private key, expands it to
     /// a full WOTS private key and computes the corresponding public key.
-    /// It requires the seed, pub_seed (used to generate bitmasks and hash keys)
-    /// and the address of this WOTS key pair.
-    pub fn from_sk(seed: &Seed, pub_seed: &Seed, address: &mut Adrs) -> Self {
+    /// It requires the private key and a pub_seed (used to generate bitmasks and hash keys).
+    pub fn from_sec_key(sec_key: &SecKey, pub_seed: &Seed) -> Self {
         let mut pub_key = Self {
             inner: [0; N * LEN],
             pub_seed: *pub_seed,
-            address: *address,
+            address: sec_key.address,
         };
 
+        let mut address = sec_key.address;
         for i in 0..LEN {
             address.set_chain(i as u32);
-            let sec_key = prf(&seed.0, &address.0);
+            let sec_key = prf(&sec_key.seed.0, &address.0);
             chain(
                 &mut pub_key.inner[(i * N)..(i * N + N)],
                 &sec_key,
                 0,
                 W - 1,
                 pub_seed,
-                address,
+                &mut address,
             );
         }
 
