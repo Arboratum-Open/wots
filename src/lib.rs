@@ -1,5 +1,13 @@
-//#![allow(dead_code)]
 //#![no_std]
+#![deny(unused_extern_crates)]
+#![warn(
+    //missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    unreachable_pub
+)]
+
+//! Winternitz One Time Signature Scheme (W-OTS+)
 
 use rand;
 
@@ -23,6 +31,7 @@ const LEN: usize = L1 + L2;
 pub struct Seed([u8; N]);
 
 impl Seed {
+    /// Generate a random seed
     pub fn new() -> Self {
         Self(rand::random())
     }
@@ -33,6 +42,7 @@ impl Seed {
 pub struct Adrs([u8; 32]);
 
 impl Adrs {
+    /// Generate a random address
     pub fn new() -> Self {
         Self(rand::random())
     }
@@ -54,7 +64,7 @@ impl Adrs {
 }
 
 /// WOTS+ private key that hasn't expanded yet. It contain a seed to derive and an address for the key pair
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct SecKey {
     seed: Seed,
     address: Adrs,
@@ -69,6 +79,7 @@ pub struct Signature {
 }
 
 impl SecKey {
+    /// Generate a random secret key
     pub fn new() -> Self {
         Self {
             seed: Seed::new(),
@@ -76,10 +87,12 @@ impl SecKey {
         }
     }
 
+    /// Set the seed of secret key
     pub fn set_seed(&mut self, seed: Seed) {
         self.seed = seed;
     }
 
+    /// Set the address of secret key
     pub fn set_address(&mut self, address: Adrs) {
         self.address = address;
     }
@@ -150,6 +163,7 @@ impl PubKey {
         pubkey
     }
 
+    /// Takes a WOTS signature and an n-byte message, computes a WOTS public key.
     pub fn from_signature(sig: &Signature, msg: &[u8; N]) -> Self {
         let lengths = concatenation(msg);
         let mut address = sig.address;
