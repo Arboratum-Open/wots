@@ -152,7 +152,7 @@ impl PubKey {
 
     pub fn from_signature(sig: &Signature, msg: &[u8; N]) -> Self {
         let lengths = concatenation(msg);
-        let address = sig.address;
+        let mut address = sig.address;
         let mut pubkey = Self {
             inner: [0; N * LEN],
             pub_seed: sig.pub_seed,
@@ -160,6 +160,7 @@ impl PubKey {
         };
 
         for (i, n) in lengths.iter().enumerate() {
+            address.set_chain(i as u32);
             chain(
                 &mut pubkey.inner[(i * N)..(i * N + N)],
                 &sig.inner[(i * N)..(i * N + N)],
@@ -249,14 +250,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test() {
-        let sk = SecKey::default();
-        println!("{}", sk.seed.0[10]);
-        let seed = Seed::default();
-        println!("{}", seed.0[0]);
-        let pk = PubKey::from_seckey(&sk, &seed);
-        let sig = sk.sign(&seed, &[0;32]);
-        println!("{}", pk.inner[100]);
-        println!("{}", sig.inner[100]);
+    fn same_key() {
+        let mut sk = SecKey::default();
+        sk.set_seed(Seed::new());
+        let pub_seed = Seed::default();
+        let pk = PubKey::from_seckey(&sk, &pub_seed);
+        let msg: [u8;N] = rand::random();
+        let sig = sk.sign(&pub_seed, &msg);
+        let pk2 = PubKey::from_signature(&sig, &msg);
+        
+        
+        for i in 0..N*LEN {
+            assert_eq!(pk.inner[i], pk2.inner[i]);
+        }
     }
 }
