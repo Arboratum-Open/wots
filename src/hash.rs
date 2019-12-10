@@ -1,4 +1,7 @@
+#[cfg(feature = "WOTSP-SHA2_256")]
 use sha2::{Digest, Sha256};
+#[cfg(feature = "WOTSP-SHA2_512")]
+use sha2::{Digest, Sha512};
 
 use crate::N;
 
@@ -6,7 +9,11 @@ const PADDING_F: usize = 0;
 const PADDING_PRF: usize = 3;
 
 fn core_hash(input: &[u8]) -> [u8; N] {
+    #[cfg(feature = "WOTSP-SHA2_256")]
     let mut hasher = Sha256::new();
+    #[cfg(feature = "WOTSP-SHA2_512")]
+    let mut hasher = Sha512::new();
+
     hasher.input(input);
     hasher.result().into()
 }

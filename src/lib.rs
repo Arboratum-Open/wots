@@ -14,17 +14,8 @@ use rand;
 mod hash;
 use hash::{byte_array, hash_f, prf};
 
-/// The message length as well as the length of a private key, public key, or signature element in bytes.
-const N: usize = 32;
-/// The Winternitz parameter; it is a member of the set {4, 16}.
-const W: usize = 16;
-const LOG_W: usize = 4;
-/// L1 = ceil(8N / lg(W))
-const L1: usize = 64;
-/// L2 = floor(lg(L1 * (W - 1)) / lg(W)) + 1
-const L2: usize = 3;
-/// The number of N-byte string elements in a WOTS+ private key, public key, and signature.
-const LEN: usize = L1 + L2;
+pub mod params;
+use params::{N, W, LOG_W, L1, L2, LEN};
 
 /// The key seed for both secrey key and public key
 #[derive(Clone, Copy, Default, Debug)]
