@@ -14,17 +14,22 @@ use rand;
 mod hash;
 use hash::{byte_array, hash_f, prf};
 
-pub mod params;
+mod params;
 use params::{N, W, LOG_W, L1, L2, LEN};
 
 /// The key seed for both secrey key and public key
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy)]
 pub struct Seed([u8; N]);
 
 impl Seed {
     /// Generate a random seed
     pub fn new() -> Self {
-        Self(rand::random())
+        let mut inner = [0u8; N];
+        for i in 0..N {
+            inner[i] = rand::random();
+        }
+
+        Self(inner)
     }
 }
 
@@ -55,7 +60,7 @@ impl Adrs {
 }
 
 /// WOTS+ private key that hasn't expanded yet. It contain a seed to derive and an address for the key pair
-#[derive(Clone, Default, Debug)]
+#[derive(Clone)]
 pub struct SecKey {
     seed: Seed,
     address: Adrs,
@@ -256,11 +261,11 @@ mod tests {
 
     #[test]
     fn same_key() {
-        let mut sk = SecKey::default();
+        let mut sk = SecKey::new();
         sk.set_seed(Seed::new());
-        let pub_seed = Seed::default();
+        let pub_seed = Seed::new();
         let pk = PubKey::from_seckey(&sk, &pub_seed);
-        let msg: [u8;N] = rand::random();
+        let msg = [0u8; N];
         let sig = sk.sign(&pub_seed, &msg);
         let pk2 = PubKey::from_signature(&sig, &msg);
         

@@ -15,7 +15,9 @@ fn core_hash(input: &[u8]) -> [u8; N] {
     let mut hasher = Sha512::new();
 
     hasher.input(input);
-    hasher.result().into()
+    let mut output = [0u8; N];
+    output.copy_from_slice(hasher.result().as_slice());
+    output
 }
 
 /// Compute pseudorandom function PRF(key, input), for a key of params->n bytes, and a 32-byte input.

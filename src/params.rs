@@ -24,24 +24,24 @@
 
 /// The message length as well as the length of a private key, public key, or signature element in bytes.
 #[cfg(any(feature = "WOTSP-SHA2_256", feature = "WOTSP-SHAKE_256"))]
-pub const N: usize = 32;
+pub(crate) const N: usize = 32;
 #[cfg(any(feature = "WOTSP-SHA2_512", feature = "WOTSP-SHAKE_512"))]
-pub const N: usize = 64;
+pub(crate) const N: usize = 64;
 
 /// The Winternitz parameter; it is a member of the set {4, 16}.
-pub const W: usize = 16;
+pub(crate) const W: usize = 16;
 
 /// Log of Winternitz parameter
-pub const LOG_W: usize = 4;
+pub(crate) const LOG_W: usize = 4;
 
 /// L1 = ceil(8N / lg(W))
 #[cfg(any(feature = "WOTSP-SHA2_256", feature = "WOTSP-SHAKE_256"))]
-pub const L1: usize = 64;
+pub(crate) const L1: usize = 64;
 #[cfg(any(feature = "WOTSP-SHA2_512", feature = "WOTSP-SHAKE_512"))]
-pub const L1: usize = 128;
+pub(crate) const L1: usize = 128;
 
 /// L2 = floor(lg(L1 * (W - 1)) / lg(W)) + 1
-pub const L2: usize = 3;
+pub(crate) const L2: usize = 3;
 
 /// The number of N-byte string elements in a WOTS+ private key, public key, and signature.
-pub const LEN: usize = L1 + L2;
+pub(crate) const LEN: usize = L1 + L2;
