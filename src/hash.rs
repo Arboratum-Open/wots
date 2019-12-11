@@ -2,6 +2,10 @@
 use sha2::{Digest, Sha256};
 #[cfg(feature = "WOTSP-SHA2_512")]
 use sha2::{Digest, Sha512};
+#[cfg(feature = "WOTSP-SHAKE_256")]
+use sha3::{Digest, Sha3_256};
+#[cfg(feature = "WOTSP-SHAKE_512")]
+use sha3::{Digest, Sha3_512};
 
 use crate::N;
 
@@ -13,6 +17,10 @@ fn core_hash(input: &[u8]) -> [u8; N] {
     let mut hasher = Sha256::new();
     #[cfg(feature = "WOTSP-SHA2_512")]
     let mut hasher = Sha512::new();
+    #[cfg(feature = "WOTSP-SHAKE_256")]
+    let mut hasher = Sha3_256::new();
+    #[cfg(feature = "WOTSP-SHAKE_512")]
+    let mut hasher = Sha3_512::new();
 
     hasher.input(input);
     let mut output = [0u8; N];

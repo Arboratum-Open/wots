@@ -10,12 +10,12 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 rand = "0.7.2"
-sha2 = "0.8"
-byteorder = "1.3.2"
+sha2 = "0.8.0"
+sha3 = "0.8.2"
 
 [features]
 # The default signature systems is WOTSP-SHA2_256.
-default = ["WOTSP-SHA2_256"]
+default = ["WOTSP-SHAKE_256"]
 WOTSP-SHA2_256 = []
 WOTSP-SHA2_512 = []
 WOTSP-SHAKE_256 = []
